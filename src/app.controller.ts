@@ -11,7 +11,7 @@ export class AppController {
   @Get()
   getHello() {
     return {
-      message: 'Welcome to tempate service api',
+      message: 'Welcome to nest-aws api',
       lastUpdate,
     };
   }

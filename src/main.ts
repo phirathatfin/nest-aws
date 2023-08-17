@@ -3,7 +3,7 @@ import { AppModule } from './app.module';
 import { VersioningType } from '@nestjs/common';
 
 async function bootstrap() {
-  const globalPrefix = 'template-service';
+  const globalPrefix = 'nest-aws';
 
   const app = await NestFactory.create(AppModule);
 
