@@ -10,11 +10,11 @@ concurrency: ${{ github.workflow }}-${{ github.ref }}
 # Update environment variables below
 env:
   AWS_REGION: ap-southeast-1
-  ECR_REPOSITORY: fins-app-aws-1
-  ECS_SERVICE: fins-app-aws-1
+  ECR_REPOSITORY: nest-aws-1
+  ECS_SERVICE: nest-aws-1
   ECS_CLUSTER: fins-cluster-terraform
   ECS_TASK_DEFINITION: .github/task-definition.json
-  CONTAINER_NAME: fins-app-aws-1
+  CONTAINER_NAME: nest-aws-1
   AWS_ACCESS_KEY_ID: ${{secrets.AWS_ACCESS_KEY_ID}}
   AWS_SECRET_ACCESS_KEY: ${{secrets.AWS_SECRET_ACCESS_KEY}}
 
@@ -44,67 +44,67 @@ jobs:
           publish: npx changeset publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#   aws:
-#     name: Deploy to ECS
-#     runs-on: ubuntu-latest
-#     needs: release
-#     if: needs.release.outputs.published == 'true'
-#     steps:
-#       - name: Checkout Repo
-#         uses: actions/checkout@v3
+  aws:
+    name: Deploy to ECS
+    runs-on: ubuntu-latest
+    needs: release
+    if: needs.release.outputs.published == 'true'
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v3
 
-#       - name: get-npm-version
-#         id: package-version
-#         uses: martinbeentjes/npm-get-version-action@main
+      - name: get-npm-version
+        id: package-version
+        uses: martinbeentjes/npm-get-version-action@main
 
-#       - name: Package version
-#         run: |
-#           echo "Package Version: ${{ steps.package-version.outputs.current-version }}"
+      - name: Package version
+        run: |
+          echo "Package Version: ${{ steps.package-version.outputs.current-version }}"
 
-#       - name: Configure AWS credentials
-#         uses: aws-actions/configure-aws-credentials@v1
-#         with:
-#           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-#           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-#           aws-region: ${{ env.AWS_REGION }}
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
 
-#       - name: Login to Amazon ECR
-#         id: login-ecr
-#         uses: aws-actions/amazon-ecr-login@v1
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
 
-#       - name: Create .env file
-#         run: |
-#           cat << EOF > .env
-#           PORT=3000
-#           EOF
-#           echo "create .env file"
+      - name: Create .env file
+        run: |
+          cat << EOF > .env
+          PORT=3000
+          EOF
+          echo "create .env file"
 
-#       - name: Build, tag, and push image to Amazon ECR
-#         id: build-image
-#         env:
-#           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-#           IMAGE_TAG: ${{ steps.package-version.outputs.current-version }}
-#         run: |
-#           # Build a docker container and
-#           # push it to ECR so that it can
-#           # be deployed to ECS.
-#           # docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-#           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-#           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-#           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+      - name: Build, tag, and push image to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ steps.package-version.outputs.current-version }}
+        run: |
+          # Build a docker container and
+          # push it to ECR so that it can
+          # be deployed to ECS.
+          # docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
-#       - name: Fill in the new image ID in the Amazon ECS task definition
-#         id: task-def
-#         uses: aws-actions/amazon-ecs-render-task-definition@v1
-#         with:
-#           task-definition: ${{ env.ECS_TASK_DEFINITION }}
-#           container-name: ${{ env.CONTAINER_NAME }}
-#           image: ${{ steps.build-image.outputs.image }}
+      # - name: Fill in the new image ID in the Amazon ECS task definition
+      #   id: task-def
+      #   uses: aws-actions/amazon-ecs-render-task-definition@v1
+      #   with:
+      #     task-definition: ${{ env.ECS_TASK_DEFINITION }}
+      #     container-name: ${{ env.CONTAINER_NAME }}
+      #     image: ${{ steps.build-image.outputs.image }}
 
-#       - name: Deploy Amazon ECS task definition
-#         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-#         with:
-#           task-definition: ${{ steps.task-def.outputs.task-definition }}
-#           service: ${{ env.ECS_SERVICE }}
-#           cluster: ${{ env.ECS_CLUSTER }}
-#           wait-for-service-stability: true
+      # - name: Deploy Amazon ECS task definition
+      #   uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+      #   with:
+      #     task-definition: ${{ steps.task-def.outputs.task-definition }}
+      #     service: ${{ env.ECS_SERVICE }}
+      #     cluster: ${{ env.ECS_CLUSTER }}
+      #     wait-for-service-stability: true
